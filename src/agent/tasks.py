@@ -19,17 +19,24 @@ from common.types import (
     TextPart,
 )
 
+from agent.llm import JokeTeller
+
 
 class AgentTaskManager(InMemoryTaskManager):
     """
     Gestor de tareas del agente.
     """
 
-    def __init__(self):
+    def __init__(self, model_name: str):
         """
         Inicializa el gestor de tareas.
+
+        Args:
+            model_name (str): Nombre del modelo a usar.
         """
         super().__init__()
+        self.model_name = model_name
+        self.joke_teller = JokeTeller(model_name=model_name)
 
     async def on_send_task(self, request: SendTaskRequest) -> SendTaskResponse:
         """
@@ -53,12 +60,12 @@ class AgentTaskManager(InMemoryTaskManager):
         if not isinstance(request.params.message.parts[0], TextPart):
             raise ValueError("Invalid message part type")
 
-        received_text = request.params.message.parts[0].text
+        response = await self.joke_teller.invoke(request.params.message.parts[0].text)
 
         task = await self._update_task(
             task_id=task_id,
             task_state=TaskState.COMPLETED,
-            response_text=f"on_send_task received: {received_text}",
+            response_text=f"on_send_task received: {response.joke}",
         )
 
         # Send the response
@@ -109,18 +116,12 @@ class AgentTaskManager(InMemoryTaskManager):
             state=task_state,
             message=Message(
                 role="agent",
-                parts=[
-                    TextPart(text=part["response_text"])
-                    for part in agent_response_parts
-                ],
+                parts=[TextPart(text=part["text"]) for part in agent_response_parts],
             ),
         )
         task.artifacts = [
             Artifact(
-                parts=[
-                    TextPart(text=part["response_text"])
-                    for part in agent_response_parts
-                ],
+                parts=[TextPart(text=part["text"]) for part in agent_response_parts],
             )
         ]
         return task
