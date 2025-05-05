@@ -19,7 +19,7 @@ from common.types import (
     TextPart,
 )
 
-from agent.llm import JokeTeller
+from llm import JokeTeller
 
 
 class AgentTaskManager(InMemoryTaskManager):

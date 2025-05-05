@@ -5,9 +5,9 @@ Este modulo lanza el servidor que implementa el agente.
 from common.server import A2AServer
 from common.types import AgentCapabilities, AgentCard, AgentSkill
 
-from agent.logs import logger
-from agent.settings import settings
-from agent.tasks import AgentTaskManager
+from logs import logger
+from settings import settings
+from tasks import AgentTaskManager
 
 
 def main(host: str, port: int, model: str):
